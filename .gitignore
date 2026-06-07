@@ -1,0 +1,13 @@
+# Data & Models
+data/raw/*
+data/processed/*
+models/*.joblib
+!data/raw/.gitkeep
+!models/.gitkeep
+
+# Secrets
+.env
+
+# Python Cache
+__pycache__/
+*.py[cod]
