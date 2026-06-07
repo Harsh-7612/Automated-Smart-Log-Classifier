@@ -1,4 +1,6 @@
-scikit-learn
-regex
-python-dotenv
-sentence_transformers
+pandas>=1.5.0
+sentence-transformers>=2.2.2
+scikit-learn>=1.2.0
+joblib>=1.2.0
+groq>=0.4.1
+python-dotenv>=1.0.0
