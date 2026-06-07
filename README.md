@@ -2,36 +2,44 @@
 
 <img width="649" height="397" alt="image" src="https://github.com/user-attachments/assets/051f2aac-5a5c-4e24-abae-23bd8fe85780" />
 
-Summary:  
-Developed a hybrid intelligent log-classification pipeline that combines regex-based pattern matching, transformer embeddings (MiniLM/Sentence-BERT), traditional ML classification, and LLM-based fallback routing to automate categorization of heterogeneous system logs. The system uses clustering-assisted pattern discovery for regex generation, semantic embedding models for unstructured logs, and source-aware routing for legacy-system specific classification.
 
 
-Detailed:  
-I started with a log dataset in Dataset/synthetic_logs.csv and loaded it into a notebook using pandas. The dataset contained 2410 log entries with fields including timestamp, source, log_message, target_label, complexity, clusters, and regex_label. I analyzed the dataset distribution across 6 log sources (ModernCRM, AnalyticsEngine, ModernHR, BillingSystem, ThirdPartyAPI, LegacyCRM) and 9 target classes (HTTP Status, Critical Error, Security Alert, Error, System Notification, Resource Usage, User Action, Workflow Error, Deprecation Warning).
+# Hybrid Intelligent Log Classifier
 
-To identify recurring structural patterns in the logs, I performed exploratory clustering analysis and grouped semantically similar messages into clusters. This allowed me to discover repetitive and highly structured log formats—such as login/logout events and email-related failures—that were suitable for deterministic regex-based classification.
+![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
+![Groq](https://img.shields.io/badge/Groq-Llama--3.3--70B-black)
+![Sentence-BERT](https://img.shields.io/badge/Sentence--BERT-all--MiniLM-orange)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-Using these cluster insights, I manually engineered regex rules for structured and repetitive log patterns. I labeled logs matching these deterministic patterns via a regex_label field and separated the remaining unmatched logs into a non-regex subset for semantic classification.
+## About the Project
 
-I implemented the rule-based classification module in processor_regex.py, where structured log patterns such as user login/logout events, backup notifications, reboot messages, upload confirmations, and account creation logs are directly mapped to their respective categories. This serves as the system’s fast-path deterministic classifier.
+The Hybrid Intelligent Log Classifier is a multi-stage routing pipeline engineered to automate the categorization of heterogeneous system logs. By combining clustering-assisted regex rules, transformer-based semantic embeddings, and LLM-assisted classification, the system efficiently maps unstructured log data to 9 target classes across 6 distinct enterprise log sources.
 
-For logs not handled by regex, I built a semantic classification pipeline in processor_bert.py using Sentence Transformers (all-MiniLM-L6-v2) to generate dense semantic embeddings. These embeddings are passed into a trained supervised classifier stored as log_classifier.joblib to predict the final label. I also implemented confidence thresholding, returning Unclassified when prediction confidence falls below 0.5.
+Designed for both speed and accuracy, the architecture uses deterministic rules for known structured patterns, a Sentence-Transformer ML model for unstructured semantic logs, and a dedicated LLM fallback for volatile legacy systems.
 
-To handle legacy-system logs originating from LegacyCRM, I designed a dedicated LLM-based classifier in processor_llm.py. Using the Groq API with Llama-3.3-70B-Versatile, I prompt the model to classify legacy logs into Workflow Error, Deprecation Warning, or Unclassified, addressing cases where traditional regex/ML approaches underperform.
+### Pipeline Architecture & Routing Logic
+1. **Source-Aware LLM Routing:** Logs originating from `LegacyCRM` are immediately routed to `processor_llm.py`, utilizing `Llama-3.3-70B-Versatile` via the Groq API to navigate deprecated or complex workflow errors.
+2. **Deterministic Fast-Path:** All other sources pass through `processor_regex.py`. Known structural patterns (e.g., user logins, backups, reboots) are instantly categorized.
+3. **Semantic ML Fallback:** Unmatched logs default to `processor_bert.py`, where dense semantic embeddings (`all-MiniLM-L6-v2`) are fed into a supervised classifier. Predictions falling below a 0.5 confidence threshold are safely tagged as `Unclassified`.
 
-Finally, I integrated all components into a unified routing pipeline in app.py. The routing logic first checks the log source:
+## Prerequisites
 
-If the source is LegacyCRM, the log is routed to the LLM classifier
-Otherwise, regex-based classification is attempted first
-If no regex rule matches, the semantic embedding + ML classifier is used as fallback
+* Python 3.8+
+* Groq API Key (for LegacyCRM LLM routing)
 
-I also implemented batch CSV processing support through classify_csv, which processes an input CSV of logs, classifies each entry, and outputs predictions to output.csv.
+## Installation
 
-The final system is a hybrid multi-stage intelligent log classification architecture that combines:
-
-Clustering-assisted regex rule discovery
-Deterministic rule-based classification
-Transformer embedding-based semantic classification
-LLM-based source-aware fallback routing
-
-This architecture enables scalable, robust classification of heterogeneous structured and unstructured logs across modern and legacy enterprise systems.
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/Harsh-7612/Automated-Smart-Log-Classifier.git](https://github.com/Harsh-7612/Automated-Smart-Log-Classifier.git)
+   cd Automated-Smart-Log-Classifier
+   ```
+2. Setup Environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your GROQ_API_KEY
+   ```
+3. Install Dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
